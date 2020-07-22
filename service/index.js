@@ -3,7 +3,7 @@ import 'firebase/auth'
 
 import LibraryConstants from '@thzero/library/constants'
 
-import Utility from '@thzero/library/utility'
+import Utility from '@thzero/library_common/utility'
 
 import Service from '@thzero/library/service/index'
 
