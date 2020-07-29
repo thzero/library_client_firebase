@@ -2,7 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/analytics';
 
-import LibraryConstants from '@thzero/library/constants';
+import LibraryConstants from '@thzero/library_client/constants';
 
 import config from 'local-config';
 
