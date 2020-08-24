@@ -30,7 +30,7 @@ class FirebaseAuthService extends Service {
 			await this._serviceStore.dispatcher.user.resetUser()
 		}
 		catch (err) {
-			this._logger.exception(err)
+			this._logger.exception('FirebaseAuthService', 'deleteUser', err)
 			throw err
 		}
 	}
@@ -45,7 +45,7 @@ class FirebaseAuthService extends Service {
 
 	get isAuthenticated() {
 		const user = this.user;
-		this._logger.debug('isAuthenticated.user', user);
+		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
 		return user != null;
 	}
 
@@ -59,7 +59,7 @@ class FirebaseAuthService extends Service {
 			this._serviceEvent.emit('auth-refresh', user);
 		}
 		catch (err) {
-			this._logger.exception(err);
+			this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err);
 		}
 
 		// try {
@@ -75,7 +75,7 @@ class FirebaseAuthService extends Service {
 		// 	}, 60 * 1000)
 		// }
 		// catch (err) {
-		// 	this._logger.exception(err)
+		// 	this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err)
 		// }
 	}
 
@@ -95,7 +95,7 @@ class FirebaseAuthService extends Service {
 			this.updateExternalUser(null);
 		}
 		catch (err) {
-			this._logger.exception(err);
+			this._logger.exception('FirebaseAuthService', 'signIn', err);
 			this.updateExternalUser(null);
 		}
 
@@ -154,7 +154,7 @@ class FirebaseAuthService extends Service {
 			window.location.href = '/';
 		}
 		catch (e) {
-			this._logger.exception(e);
+			this._logger.exception('FirebaseAuthService', 'signOut', e);
 		}
 	}
 
@@ -163,34 +163,34 @@ class FirebaseAuthService extends Service {
 	// 		forceRefresh = false
 
 	// 	const user = this.user
-	// 	this._logger.debug('auth.token.user', user)
+	// 	this._logger.debug('FirebaseAuthService', 'token', 'user', user)
 	// 	if (!user)
 	// 		return null
 
-	// 	this._logger.debug('auth.token.forceRefresh', forceRefresh)
-	// 	return this.tokenUser(user, forceRefresh)
+	// 	this._logger.debug('FirebaseAuthService', 'token', 'forceRefresh', forceRefresh)
+	// 	return this.tokenUser('FirebaseAuthService', 'token', user, forceRefresh)
 	// }
 
 	async tokenUser(user, forceRefresh) {
 		forceRefresh = forceRefresh !== null ? forceRefresh : false;
 
 		try {
-			this._logger.debug('auth.tokenUser.user', user);
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user);
 			if (!user) {
 				await this._serviceStore.dispatcher.user.setTokenResult(null);
 				await this._serviceStore.dispatcher.user.setClaims(null);
 				return;
 			}
 
-			this._logger.debug('auth.tokenUser.forceRefresh', forceRefresh);
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh);
 			const tokenResult = await firebase.auth().currentUser.getIdTokenResult(forceRefresh);
 			if (tokenResult) {
 				await this._serviceStore.dispatcher.user.setTokenResult(tokenResult);
 				const token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
-				this._logger.debug('auth.tokenUser.claims', claims);
+				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims', claims);
 				claims = claims != null ? claims.custom : null;
-				this._logger.debug('auth.tokenUser.claims.custom', claims);
+				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims.custom', claims);
 				await this._serviceStore.dispatcher.user.setClaims(claims);
 
 				const expired = Utility.getDateParse(tokenResult.expirationTime);
@@ -218,7 +218,7 @@ class FirebaseAuthService extends Service {
 			}
 		}
 		catch (err) {
-			this._logger.exception(err);
+			this._logger.exception('FirebaseAuthService', 'tokenUser', err);
 			throw err;
 		}
 	}
@@ -256,7 +256,7 @@ class FirebaseAuthService extends Service {
 
 	get user() {
 		const user = firebase.auth().currentUser;
-		this._logger.debug('auth.user', user);
+		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user);
 		return user;
 	}
 
