@@ -3,7 +3,7 @@ import 'firebase/auth'
 
 import LibraryConstants from '@thzero/library_client/constants'
 
-import Utility from '@thzero/library_common/utility'
+import LibraryUtility from '@thzero/library_common/utility';
 
 import Service from '@thzero/library_client/service/index'
 
@@ -19,19 +19,18 @@ class FirebaseAuthService extends Service {
 		this._serviceStore = null
 	}
 
-	async deleteUser() {
+	async deleteUser(correlationId) {
 		try {
-			const user = await firebase.auth().currentUser
-			if (!user) {
-				return
-			}
+			const user = await firebase.auth().currentUser;
+			if (!user)
+				return;
 
-			await user.delete()
-			await this._serviceStore.dispatcher.user.resetUser()
+			await user.delete();
+			await this._serviceStore.dispatcher.user.resetUser();
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'deleteUser', err)
-			throw err
+			this._logger.exception('FirebaseAuthService', 'deleteUser', err, correlationId);
+			throw err;
 		}
 	}
 
@@ -50,6 +49,7 @@ class FirebaseAuthService extends Service {
 	}
 
 	async onAuthStateChanged(user) {
+		const correlationId = LibraryUtility.generateId();
 		try {
 			await this.updateExternalUser(user, true);
 			// if (!user)
@@ -59,7 +59,7 @@ class FirebaseAuthService extends Service {
 			this._serviceEvent.emit('auth-refresh', user);
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err);
+			this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err, correlationId);
 		}
 
 		// try {
@@ -75,34 +75,34 @@ class FirebaseAuthService extends Service {
 		// 	}, 60 * 1000)
 		// }
 		// catch (err) {
-		// 	this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err)
+		// 	this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err, correlationId)
 		// }
 	}
 
-	async signIn() {
+	async signIn(correlationId) {
 		if (this.isAuthenticated)
 			return false;
 
 		try {
 			const result = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
 			if (result && result.user) {
-				this.updateExternalUser(result.user);
+				this.updateExternalUser(correlationId, result.user);
 				// this._serviceRouter.route('/')
 				window.location.href = '/';
 				return true;
 			}
 
-			this.updateExternalUser(null);
+			this.updateExternalUser(correlationId, null);
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'signIn', err);
-			this.updateExternalUser(null);
+			this._logger.exception('FirebaseAuthService', 'signIn', err, correlationId);
+			this.updateExternalUser(correlationId, null);
 		}
 
 		return true;
 	}
 
-	async signInCompleted() {
+	async signInCompleted(correlationId) {
 		// if (await auth.isAuthenticated())
 		//   return
 		// firebase.auth().getRedirectResult().then(function (result) {
@@ -131,7 +131,7 @@ class FirebaseAuthService extends Service {
 		// })
 	}
 
-	async signOut() {
+	async signOut(correlationId) {
 		try {
 			// await firebase.auth().signOut()
 			// await this._serviceStore.dispatcher.user.setTokenResult(null)
@@ -145,16 +145,16 @@ class FirebaseAuthService extends Service {
 			// list.push(this._serviceStore.dispatcher.user.setClaims(null))
 			// list.push(this._serviceStore.dispatcher.user.setUser(null))
 			// list.push(this._serviceStore.dispatcher.user.setLoggedIn(false))
-			list.push(this._serviceStore.dispatcher.user.resetUser());
-			list.push(this._serviceStore.dispatcher.user.setAuthCompleted(false));
+			list.push(this._serviceStore.dispatcher.user.resetUser(correlationId));
+			list.push(this._serviceStore.dispatcher.user.setAuthCompleted(correlationId, false));
 
 			await Promise.all(list);
 
 			// this._serviceRouter.route('/')
 			window.location.href = '/';
 		}
-		catch (e) {
-			this._logger.exception('FirebaseAuthService', 'signOut', e);
+		catch (err) {
+			this._logger.exception('FirebaseAuthService', 'signOut', err, correlationId);
 		}
 	}
 
@@ -163,42 +163,42 @@ class FirebaseAuthService extends Service {
 	// 		forceRefresh = false
 
 	// 	const user = this.user
-	// 	this._logger.debug('FirebaseAuthService', 'token', 'user', user)
+	// 	this._logger.debug('FirebaseAuthService', 'token', 'user', user, correlationId);
 	// 	if (!user)
 	// 		return null
 
-	// 	this._logger.debug('FirebaseAuthService', 'token', 'forceRefresh', forceRefresh)
+	// 	this._logger.debug('FirebaseAuthService', 'token', 'forceRefresh', forceRefresh, correlationId)
 	// 	return this.tokenUser('FirebaseAuthService', 'token', user, forceRefresh)
 	// }
 
-	async tokenUser(user, forceRefresh) {
+	async tokenUser(correlationId, user, forceRefresh) {
 		forceRefresh = forceRefresh !== null ? forceRefresh : false;
 
 		try {
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user);
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, correlationId);
 			if (!user) {
-				await this._serviceStore.dispatcher.user.setTokenResult(null);
-				await this._serviceStore.dispatcher.user.setClaims(null);
+				await this._serviceStore.dispatcher.user.setTokenResult(correlationId, null);
+				await this._serviceStore.dispatcher.user.setClaims(correlationId, null);
 				return;
 			}
 
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh);
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh, correlationId);
 			const tokenResult = await firebase.auth().currentUser.getIdTokenResult(forceRefresh);
 			if (tokenResult) {
 				await this._serviceStore.dispatcher.user.setTokenResult(tokenResult);
 				const token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
-				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims', claims);
+				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims', claims, correlationId);
 				claims = claims != null ? claims.custom : null;
-				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims.custom', claims);
+				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims.custom', claims, correlationId);
 				await this._serviceStore.dispatcher.user.setClaims(claims);
 
-				const expired = Utility.getDateParse(tokenResult.expirationTime);
-				const now = Utility.getDate();
+				const expired = LibraryUtility.getDateParse(tokenResult.expirationTime);
+				const now = LibraryUtility.getDate();
 				const diff = expired.diff(now);
 				const min = 5 * 60 * 1000;
 				if (diff <= min) {
-					await this.tokenUser(this.user, true).then();
+					await this.tokenUser(correlationId, this.user, true).then();
 					return;
 				}
 
@@ -207,23 +207,23 @@ class FirebaseAuthService extends Service {
 
 				const self = this;
 				this._polling = setInterval(async () => {
-					await self.tokenUser(self.user, true).then();
+					await self.tokenUser(correlationId, self.user, true).then();
 				}, diff) //60 * 1000)
 			}
 			else {
-				await this._serviceStore.dispatcher.user.setTokenResult(null);
-				await this._serviceStore.dispatcher.user.setClaims(null);
+				await this._serviceStore.dispatcher.user.setTokenResult(correlationId, null);
+				await this._serviceStore.dispatcher.user.setClaims(correlationId, null);
 				if (this._polling)
 					clearInterval(this._polling);
 			}
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'tokenUser', err);
+			this._logger.exception('FirebaseAuthService', 'tokenUser', err), correlationId;
 			throw err;
 		}
 	}
 
-	async updateExternalUser(user) {
+	async updateExternalUser(correlationId, user) {
 		// if (this._lock)
 		// 	return
 
@@ -233,20 +233,20 @@ class FirebaseAuthService extends Service {
 
 			// this._lock = true
 
-			user = this._convert(user);
+			user = this._convert(correlationId, user);
 
-			await this._serviceStore.dispatcher.user.setUser(null);
-			await this._serviceStore.dispatcher.user.setLoggedIn(false);
+			await this._serviceStore.dispatcher.user.setUser(correlationId, null);
+			await this._serviceStore.dispatcher.user.setLoggedIn(correlationId, false);
 
 			if (!user)
 				return;
 
-			await this.tokenUser(user);
+			await this.tokenUser(correlationId, user);
 			const service = this._injector.getService(LibraryConstants.InjectorKeys.SERVICE_USER);
-			const response = await service.updateExternal(user);
+			const response = await service.updateExternal(correlationId, user);
 			if (response && response.success) {
-				await this._serviceStore.dispatcher.user.setUser(response.results);
-				await this._serviceStore.dispatcher.user.setLoggedIn(true);
+				await this._serviceStore.dispatcher.user.setUser(correlationId, response.results);
+				await this._serviceStore.dispatcher.user.setLoggedIn(correlationId, true);
 			}
 		}
 		finally {
@@ -256,11 +256,11 @@ class FirebaseAuthService extends Service {
 
 	get user() {
 		const user = firebase.auth().currentUser;
-		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user);
+		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, correlationId);
 		return user;
 	}
 
-	_convert(requestedUser) {
+	_convert(correlationId, requestedUser) {
 		if (requestedUser) {
 			const user = {};
 			user.id = requestedUser.uid;
