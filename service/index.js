@@ -26,7 +26,7 @@ class FirebaseAuthService extends Service {
 				return;
 
 			await user.delete();
-			await this._serviceStore.dispatcher.user.resetUser();
+			await this._serviceStore.dispatcher.user.resetUser(correlationId);
 		}
 		catch (err) {
 			this._logger.exception('FirebaseAuthService', 'deleteUser', err, correlationId);
@@ -51,11 +51,11 @@ class FirebaseAuthService extends Service {
 	async onAuthStateChanged(user) {
 		const correlationId = LibraryUtility.generateId();
 		try {
-			await this.updateExternalUser(user, true);
+			await this.updateExternalUser(correlationId, user, true);
 			// if (!user)
 			// 	return
 
-			this._serviceStore.dispatcher.user.setAuthCompleted(true);
+			this._serviceStore.dispatcher.user.setAuthCompleted(correlationId, true);
 			this._serviceEvent.emit('auth-refresh', user);
 		}
 		catch (err) {
@@ -134,17 +134,17 @@ class FirebaseAuthService extends Service {
 	async signOut(correlationId) {
 		try {
 			// await firebase.auth().signOut()
-			// await this._serviceStore.dispatcher.user.setTokenResult(null)
-			// await this._serviceStore.dispatcher.user.setClaims(null)
-			// await this._serviceStore.dispatcher.user.setUser(null)
-			// await this._serviceStore.dispatcher.user.setLoggedIn(false)
+			// await this._serviceStore.dispatcher.user.setTokenResult(correlationId, null)
+			// await this._serviceStore.dispatcher.user.setClaims(correlationId, null)
+			// await this._serviceStore.dispatcher.user.setUser(correlationId, null)
+			// await this._serviceStore.dispatcher.user.setLoggedIn(correlationId, false)
 
 			const list = [];
 			list.push(firebase.auth().signOut());
-			// list.push(this._serviceStore.dispatcher.user.setTokenResult(null))
-			// list.push(this._serviceStore.dispatcher.user.setClaims(null))
-			// list.push(this._serviceStore.dispatcher.user.setUser(null))
-			// list.push(this._serviceStore.dispatcher.user.setLoggedIn(false))
+			// list.push(this._serviceStore.dispatcher.user.setTokenResult(correlationId, null))
+			// list.push(this._serviceStore.dispatcher.user.setClaims(correlationId, null))
+			// list.push(this._serviceStore.dispatcher.user.setUser(correlationId, null))
+			// list.push(this._serviceStore.dispatcher.user.setLoggedIn(correlationId, false))
 			list.push(this._serviceStore.dispatcher.user.resetUser(correlationId));
 			list.push(this._serviceStore.dispatcher.user.setAuthCompleted(correlationId, false));
 
@@ -185,13 +185,13 @@ class FirebaseAuthService extends Service {
 			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh, correlationId);
 			const tokenResult = await firebase.auth().currentUser.getIdTokenResult(forceRefresh);
 			if (tokenResult) {
-				await this._serviceStore.dispatcher.user.setTokenResult(tokenResult);
+				await this._serviceStore.dispatcher.user.setTokenResult(correlationId, tokenResult);
 				const token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
 				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims', claims, correlationId);
 				claims = claims != null ? claims.custom : null;
 				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims.custom', claims, correlationId);
-				await this._serviceStore.dispatcher.user.setClaims(claims);
+				await this._serviceStore.dispatcher.user.setClaims(correlationId, claims);
 
 				const expired = LibraryUtility.getDateParse(tokenResult.expirationTime);
 				const now = LibraryUtility.getDate();
@@ -256,7 +256,7 @@ class FirebaseAuthService extends Service {
 
 	get user() {
 		const user = firebase.auth().currentUser;
-		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, correlationId);
+		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryUtility.generateId());
 		return user;
 	}
 
