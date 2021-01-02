@@ -87,3 +87,27 @@ import bootStarter from '@thzero/library_client_firebase/boot/starter';
 ```
 start(app, router, store, vuetify, [ ... ], bootStarter);
 ```
+
+### Route.js
+
+Routes can be denoted as not requiring authentication.  To do so, tag on the route the following in the 'meta node'.
+
+```
+    requiresAuth: false
+```
+
+It is advised that the following routes should have authentication turned off.
+
+* Home
+* About
+* Open Source
+* Auth
+* Not Found
+* Blank
+
+It is advised that the following routes should have authentication turned on.
+
+* Admin
+* Settings
+* Support
+* Any application routes that require authenticated users.
