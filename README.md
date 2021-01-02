@@ -79,11 +79,11 @@ Merge the following to the 'src/locals/en/index.json' file:
 * Add the following import statement to the 'main.js' file.
 
 ```
-import bootAuth from '@thzero/library_client_firebase/boot';
+import bootStarter from '@thzero/library_client_firebase/boot/starter';
 ```
 
 * Adjust the start method of the 'main.js' file to iclude 'bootAuth' as the last parameter.
 
 ```
-start(app, router, store, vuetify, [ ... ], bootAuth);
+start(app, router, store, vuetify, [ ... ], bootStarter);
 ```
