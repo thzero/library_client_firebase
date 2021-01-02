@@ -4,6 +4,86 @@
 
 # library_client_firebase
 
-### Installation
+## Installation
 
 [![NPM](https://nodei.co/npm/@thzero/library_client_firebase.png?compact=true)](https://npmjs.org/package/@thzero/library_client_firebase)
+
+## Requirements
+
+### Firebase
+
+Google Firebase (https://firebase.google.com) provides the social based authentication; currently only Google social accounts are supported.
+
+* Add a new project
+  * If not already completed when setting up the server application
+* Setup **Authentication**, enabled Google in the **Sign-in method**.
+  * If not already completed when setting up the server application
+* Get the Firebase SDK configuration
+  * Go to Project Overview->Settings->General
+  * Click **Add App** and select **Web**
+    * Click *Firebase SDK snippet*, select **Config*
+    * Select the JSON object and store it
+    * The contents of the JSON object will be stored as key/value pairs in the external/firebase confib object (below)
+* Supports Firebase Analytics.
+  * Go to Project Overview->Settings->Integrations
+    * Enable the Google Analytics.
+    * Copy the 'measurementId' key//value pair into the external/firebase config object (below)
+
+## Configuration
+
+### Application Configuration
+
+* In the configuration files (development.json and production.json) of the application
+  * Add the following onfiguration block to contain the firebase key.
+
+```
+	,
+	"external": {
+		"firebase": <firebase key JSON object from above goes here>
+	}
+```
+
+### Locales
+
+Merge the following to the 'src/locals/en/index.json' file:
+
+```
+{
+	"admin": {
+		"users": "Users"
+	},
+	"forms": {
+		"externalId": "External Id",
+		"news": {
+		  "requiresAuth": "Requires Authentication",
+		},
+		"role": "Role",
+		"roles": "Roles",
+	},
+	"news": {
+		"requiresAuth": "Authenticated",
+	},
+	"users": {
+		"actions": "Actions",
+		"externalId": "External Id",
+		"id": "Id",
+		"name": "Name",
+		"role": "Role",
+		"roles": "Roles"
+	}
+ }
+```
+
+### Main.js
+
+* Add the following import statement to the 'main.js' file.
+
+```
+import bootStarter from '@thzero/library_client_firebase/boot/starter';
+```
+
+* Adjust the start method of the 'main.js' file to iclude 'bootAuth' as the last parameter.
+
+```
+start(app, router, store, vuetify, [ ... ], bootStarter);
+```
