@@ -3,8 +3,6 @@ import 'firebase/auth'
 
 import LibraryConstants from '@thzero/library_client/constants'
 
-import LibraryUtility from '@thzero/library_common/utility';
-
 import Service from '@thzero/library_client/service/index'
 
 class FirebaseAuthService extends Service {
