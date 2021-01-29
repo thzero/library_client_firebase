@@ -1,6 +1,8 @@
 import firebase from 'firebase/app'
 import 'firebase/auth'
 
+import LibraryUtility from '@thzero/library_common/utility';
+
 import LibraryConstants from '@thzero/library_client/constants'
 
 import Service from '@thzero/library_client/service/index'
