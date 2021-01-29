@@ -183,7 +183,12 @@ class FirebaseAuthService extends Service {
 			}
 
 			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh, correlationId);
-			const tokenResult = await firebase.auth().currentUser.getIdTokenResult(forceRefresh);
+			const currentUser = await firebase.auth().currentUser;
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'currentUser', currentUser, correlationId);
+			if (!currentUser)
+				return;
+
+			const tokenResult = await currentUser.getIdTokenResult(forceRefresh);
 			if (tokenResult) {
 				await this._serviceStore.dispatcher.user.setTokenResult(correlationId, tokenResult);
 				const token = tokenResult.token;
