@@ -1,10 +1,10 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.13.7",
+  "version": "0.13.8",
   "version_major": 0,
   "version_minor": 13,
-  "version_patch": 7,
-  "version_date": "04/01/2021",
+  "version_patch": 8,
+  "version_date": "05/18/2021",
   "author": "thZero",
   "license": "MIT",
   "repository": {
@@ -20,7 +20,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^8.3.2"
+    "firebase": "^8.6.1"
   },
   "devDependencies": {
     "@thzero/library_cli": "^0.13.14"
