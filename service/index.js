@@ -1,22 +1,22 @@
-import firebase from 'firebase/app'
-import 'firebase/auth'
+import firebase from 'firebase/app';
+import 'firebase/auth';
+
+import LibraryConstants from '@thzero/library_client/constants';
 
 import LibraryUtility from '@thzero/library_common/utility';
 
-import LibraryConstants from '@thzero/library_client/constants'
-
-import Service from '@thzero/library_client/service/index'
+import Service from '@thzero/library_client/service/index';
 
 class FirebaseAuthService extends Service {
 	constructor() {
-		super()
+		super();
 
 		// this._lock = false
-		this._polling = null
+		this._polling = null;
 
-		this._serviceEvent = null
-		this._serviceRouter = null
-		this._serviceStore = null
+		this._serviceEvent = null;
+		this._serviceRouter = null;
+		this._serviceStore = null;
 	}
 
 	async deleteUser(correlationId) {
@@ -213,7 +213,7 @@ class FirebaseAuthService extends Service {
 				const self = this;
 				this._polling = setInterval(async () => {
 					await self.tokenUser(correlationId, self.user, true).then();
-				}, diff) //60 * 1000)
+				}, diff); // 60 * 1000)
 			}
 			else {
 				await this._serviceStore.dispatcher.user.setTokenResult(correlationId, null);
@@ -223,7 +223,7 @@ class FirebaseAuthService extends Service {
 			}
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'tokenUser', err), correlationId;
+			this._logger.exception('FirebaseAuthService', 'tokenUser', err, correlationId);
 			throw err;
 		}
 	}
