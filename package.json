@@ -1,10 +1,10 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.13.15",
+  "version": "0.14.0",
   "version_major": 0,
-  "version_minor": 13,
-  "version_patch": 15,
-  "version_date": "08/07/2021",
+  "version_minor": 14,
+  "version_patch": 0,
+  "version_date": "08/31/2021",
   "author": "thZero",
   "license": "MIT",
   "repository": {
@@ -23,10 +23,7 @@
     "firebase": "^8.9.0"
   },
   "devDependencies": {
-    "@thzero/library_cli": "^0.13.14"
-  },
-  "peerDependencies": {
-    "@thzero/library_common": "^0.13",
-    "@thzero/library_client": "^0.13"
+    "@thzero/library_cli": "^0.13",
+    "@thzero/library_common": "^0.13"
   }
 }
