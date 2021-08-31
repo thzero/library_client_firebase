@@ -1,10 +1,10 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.13.16",
+  "version": "0.14.1",
   "version_major": 0,
-  "version_minor": 13,
-  "version_patch": 16,
-  "version_date": "08/22/2021",
+  "version_minor": 14,
+  "version_patch": 1,
+  "version_date": "08/31/2021",
   "author": "thZero",
   "license": "MIT",
   "repository": {
@@ -20,13 +20,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^8.10.0"
+    "firebase": "^8.10.0",
+    "@thzero/library_client": "^0.14",
+    "@thzero/library_common": "^0.13"
   },
   "devDependencies": {
-    "@thzero/library_cli": "^0.13.15"
-  },
-  "peerDependencies": {
-    "@thzero/library_common": "^0.13",
-    "@thzero/library_client": "^0.13"
+    "@thzero/library_cli": "^0.13"
   }
 }
