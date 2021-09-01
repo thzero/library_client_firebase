@@ -181,7 +181,7 @@ class FirebaseAuthService extends UserAuthService {
 			if (!user) {
 				await this._serviceUser.setTokenResult(correlationId, null);
 				await this._serviceUser.setClaims(correlationId, null);
-				this.announceToken(correlationId, user, token);
+				this.announceToken(correlationId, user, null);
 
 				return;
 			}
