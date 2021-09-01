@@ -1,9 +1,9 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.14.6",
+  "version": "0.14.5",
   "version_major": 0,
   "version_minor": 14,
-  "version_patch": 6,
+  "version_patch": 5,
   "version_date": "09/01/2021",
   "author": "thZero",
   "license": "MIT",
@@ -17,14 +17,15 @@
   "homepage": "https://github.com/thzero/library_client_firebase#readme",
   "scripts": {
     "cli-update": "./node_modules/.bin/library-cli --updateversion --pi",
+    "cli-update-w": ".\\node_modules\\.bin\\library-cli --updateversion --pi",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^8.10.0",
+    "firebase": "^9.0.1",
     "@thzero/library_client": "^0.14",
     "@thzero/library_common": "^0.13"
   },
   "devDependencies": {
-    "@thzero/library_cli": "^0.13"
+    "@thzero/library_cli": "^0.13.17"
   }
 }
