@@ -69,7 +69,7 @@ export default ({
 	//	 const logger = GlobalUtility.$injector.getService(LibraryConstants.InjectorKeys.SERVICE_LOGGER)
 	//	 const auth = GlobalUtility.$injector.getService(LibraryConstants.InjectorKeys.SERVICE_AUTH)
 	//	 try {
-	//		 await auth.tokenUser(auth.user, true).then()
+	//		 await auth.refreshToken(correlationId, auth.externalUser, true).then()
 	//	 }
 	//	 catch (err) {
 	//		 logger.error(err)
