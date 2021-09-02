@@ -1,5 +1,6 @@
-import firebase from 'firebase/app';
-import 'firebase/auth';
+// import firebase from 'firebase/app';
+// import 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 import LibraryConstants from '@thzero/library_client/constants';
 
@@ -19,7 +20,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async deleteUser(correlationId) {
 		try {
-			const user = await firebase.auth().currentUser;
+			const user = await getAuth().currentUser;
 			if (!user)
 				return;
 
@@ -39,7 +40,7 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	get externalUser() {
-		const user = firebase.auth().currentUser;
+		const user = getAuth().currentUser;
 		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryUtility.generateId());
 		return user;
 	}
@@ -86,8 +87,11 @@ class FirebaseAuthService extends UserAuthService {
 			return false;
 
 		try {
-			const result = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+			const provider = new GoogleAuthProvider();
+			const result = await signInWithPopup(getAuth(), provider);
 			if (result && result.user) {
+				//const credential = GoogleAuthProvider.credentialFromResult(result);
+				// const token = credential.accessToken;
 				this.updateExternalUser(correlationId, result.user);
 				// this._serviceRouter.route('/')
 				window.location.href = '/';
@@ -107,7 +111,7 @@ class FirebaseAuthService extends UserAuthService {
 	async signInCompleted(correlationId) {
 		// if (await auth.isAuthenticated())
 		//   return
-		// firebase.auth().getRedirectResult().then(function (result) {
+		// getAuth().getRedirectResult().then(function (result) {
 		// 	if (result.credential) {
 		// 		// This gives you a Google Access Token. You can use it to access the Google API.
 		// 		// eslint-disable-next-line
@@ -135,14 +139,14 @@ class FirebaseAuthService extends UserAuthService {
 
 	async signOut(correlationId) {
 		try {
-			// await firebase.auth().signOut()
+			// await getAuth().signOut()
 			// await this._serviceUser.dispatcher.user.setTokenResult(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setClaims(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setUser(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setLoggedIn(correlationId, false)
 
 			const list = [];
-			list.push(firebase.auth().signOut());
+			list.push(getAuth().signOut());
 			// list.push(this._serviceUser.dispatcher.user.setTokenResult(correlationId, null))
 			// list.push(this._serviceUser.dispatcher.user.setClaims(correlationId, null))
 			// list.push(this._serviceUser.dispatcher.user.setUser(correlationId, null))
@@ -187,7 +191,7 @@ class FirebaseAuthService extends UserAuthService {
 			}
 
 			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh, correlationId);
-			const currentUser = await firebase.auth().currentUser;
+			const currentUser = await getAuth().currentUser;
 			this._logger.debug('FirebaseAuthService', 'tokenUser', 'currentUser', currentUser, correlationId);
 			if (!currentUser)
 				return;
