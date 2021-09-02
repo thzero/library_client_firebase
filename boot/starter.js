@@ -1,6 +1,6 @@
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/analytics';
+import { initializeApp } from 'firebase/app';
+import { getAuth } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 
 import LibraryConstants from '@thzero/library_client/constants';
 
@@ -22,9 +22,9 @@ export default ({
 	const configFirebase = configExternal.firebase;
 	if (!configFirebase)
 		throw Error('Invalid firebase config.');
-	firebase.initializeApp(configFirebase);
+	const firebaseApp = initializeApp(configFirebase);
 	if (configFirebase.measurementId)
-		firebase.analytics();
+		getAnalytics();
 
 	let outsideResolve;
 	let outsideReject;
@@ -33,7 +33,8 @@ export default ({
 		outsideReject = reject;
 	});
 
-	// if (firebase.auth().currentUser) {
+	const firebaseAuth = getAuth();
+	// if (firebaseAuth.currentUser) {
 	//	 const timer = setInterval(async () => {
 	//			 clearInterval(timer)
 	//			 const auth = GlobalUtility.$injector.getService(LibraryConstants.InjectorKeys.SERVICE_AUTH)
@@ -42,7 +43,7 @@ export default ({
 	// }
 	// eslint-disable-next-line
 	let init = false;
-	firebase.auth().onAuthStateChanged(async function(user) {
+	firebaseAuth.onAuthStateChanged(async function(user) {
 		// if (user == null) {
 		//	 // GlobalUtility.$navRouter.push('/auth')
 		//	 return
