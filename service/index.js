@@ -46,7 +46,7 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	get isAuthenticated() {
-		const user = this.user;
+		const user = getAuth().currentUser;
 		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
 		return user != null;
 	}
@@ -213,7 +213,7 @@ class FirebaseAuthService extends UserAuthService {
 				const diff = expired.diff(now);
 				const min = 5 * 60 * 1000;
 				if (diff <= min) {
-					await this.refreshToken(correlationId, this.user, true).then();
+					await this.refreshToken(correlationId, getAuth().currentUser, true).then();
 					return;
 				}
 
