@@ -262,7 +262,7 @@ class FirebaseAuthService extends UserAuthService {
 			await this.refreshToken(correlationId, user);
 			const service = this._injector.getService(LibraryConstants.InjectorKeys.SERVICE_USER);
 			const response = await service.updateExternal(correlationId, user);
-			if (this._hasFailed(response)) {
+			if (this._hasSucceeded(response)) {
 				await this._serviceUser.setUser(correlationId, response.results);
 				await this._serviceUser.setLoggedIn(correlationId, true);
 			}
