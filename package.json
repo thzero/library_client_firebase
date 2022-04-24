@@ -16,16 +16,12 @@
   },
   "homepage": "https://github.com/thzero/library_client_firebase#readme",
   "scripts": {
-    "cli-update": "./node_modules/.bin/library-cli --updateversion --pi",
-    "cli-update-w": ".\\node_modules\\.bin\\library-cli --updateversion --pi",
+    "cli-update": "library-cli --updateversion --pi",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^9.6.10",
     "@thzero/library_client": "^0.15",
-    "@thzero/library_common": "^0.15"
-  },
-  "devDependencies": {
-    "@thzero/library_cli": "^0.15"
+    "@thzero/library_common": "^0.15",
+    "firebase": "^9.6.10"
   }
 }
