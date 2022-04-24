@@ -181,7 +181,7 @@ class FirebaseAuthService extends UserAuthService {
 		forceRefresh = forceRefresh !== null ? forceRefresh : false;
 
 		try {
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, correlationId);
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'user', user, correlationId);
 			if (!user) {
 				await this._serviceUser.setTokenResult(correlationId, null);
 				await this._serviceUser.setClaims(correlationId, null);
@@ -190,9 +190,9 @@ class FirebaseAuthService extends UserAuthService {
 				return;
 			}
 
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'forceRefresh', forceRefresh, correlationId);
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
 			const currentUser = await getAuth().currentUser;
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'currentUser', currentUser, correlationId);
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'currentUser', currentUser, correlationId);
 			if (!currentUser)
 				return;
 
@@ -201,9 +201,9 @@ class FirebaseAuthService extends UserAuthService {
 				await this._serviceUser.setTokenResult(correlationId, tokenResult);
 				const token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
-				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims', claims, correlationId);
+				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
 				claims = claims != null ? claims.custom : null;
-				this._logger.debug('FirebaseAuthService', 'tokenUser', 'claims.custom', claims, correlationId);
+				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
 				await this._serviceUser.setClaims(correlationId, claims);
 
 				this.announceToken(correlationId, user, token);
@@ -236,7 +236,7 @@ class FirebaseAuthService extends UserAuthService {
 			}
 		}
 		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'tokenUser', err, correlationId);
+			this._logger.exception('FirebaseAuthService', 'refreshToken', err, correlationId);
 			throw err;
 		}
 	}
