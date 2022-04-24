@@ -20,8 +20,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "firebase": "^9.6.11"
+  },
+  "peerDependencies": {
     "@thzero/library_client": "^0.15",
-    "@thzero/library_common": "^0.15",
-    "firebase": "^9.6.10"
+    "@thzero/library_common": "^0.15"
   }
 }
