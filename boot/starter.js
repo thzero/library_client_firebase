@@ -10,10 +10,6 @@ import config from 'local-config';
 
 // export default async ({
 export default ({
-	// eslint-disable-next-line
-	framework,
-	// eslint-disable-next-line
-	app,
 	router
 }) => {
 	const configExternal = config.external;
