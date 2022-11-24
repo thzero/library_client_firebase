@@ -4,7 +4,7 @@ import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 import LibraryConstants from '@thzero/library_client/constants';
 
-import LibraryUtility from '@thzero/library_common/utility';
+import Utility from '@thzero/library_common/utility';
 
 import UserAuthService from '@thzero/library_client/service/auth/user';
 
@@ -41,7 +41,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	get externalUser() {
 		const user = getAuth().currentUser;
-		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryUtility.generateId());
+		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, Utility.generateId());
 		return user;
 	}
 
@@ -52,7 +52,7 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async onAuthStateChanged(user) {
-		const correlationId = LibraryUtility.generateId();
+		const correlationId = Utility.generateId();
 		try {
 			await this.updateExternalUser(correlationId, user, true);
 			// if (!user)
@@ -208,8 +208,8 @@ class FirebaseAuthService extends UserAuthService {
 
 				this.announceToken(correlationId, user, token);
 
-				const expired = LibraryUtility.getDateParse(tokenResult.expirationTime);
-				const now = LibraryUtility.getDate();
+				const expired = Utility.getDateParse(tokenResult.expirationTime);
+				const now = Utility.getDate();
 				const diff = expired.diff(now);
 				const min = 5 * 60 * 1000;
 				if (diff <= min) {
