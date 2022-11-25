@@ -8,7 +8,14 @@
 
 [![NPM](https://nodei.co/npm/@thzero/library_client_firebase.png?compact=true)](https://npmjs.org/package/@thzero/library_client_firebase)
 
-## Requirements
+### Requirements
+
+#### Packages
+
+* [![NPM](https://nodei.co/npm/@thzero/library_common.png?compact=true)](https://npmjs.org/package/@thzero/library_common)
+* [![NPM](https://nodei.co/npm/@thzero/library_client.png?compact=true)](https://npmjs.org/package/@thzero/library_client)
+
+## Configuration
 
 ### Firebase
 
@@ -28,8 +35,6 @@ Google Firebase (https://firebase.google.com) provides the social based authenti
   * Go to Project Overview->Settings->Integrations
     * Enable the Google Analytics.
     * Copy the 'measurementId' key//value pair into the external/firebase config object (below)
-
-## Configuration
 
 ### Application Configuration
 
