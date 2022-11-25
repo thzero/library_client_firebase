@@ -4,16 +4,15 @@
 
 # library_client_firebase
 
+## Requirements
+
+### NodeJs
+
+[NodeJs](https://nodejs.org) version 18+
+
 ## Installation
 
 [![NPM](https://nodei.co/npm/@thzero/library_client_firebase.png?compact=true)](https://npmjs.org/package/@thzero/library_client_firebase)
-
-### Requirements
-
-#### Packages
-
-* [![NPM](https://nodei.co/npm/@thzero/library_common.png?compact=true)](https://npmjs.org/package/@thzero/library_common)
-* [![NPM](https://nodei.co/npm/@thzero/library_client.png?compact=true)](https://npmjs.org/package/@thzero/library_client)
 
 ## Configuration
 
