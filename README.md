@@ -10,6 +10,13 @@
 
 ## Requirements
 
+### NodeJs
+
+Requires 
+* [library_common](https://npmjs.org/package/@thzero/library_common)
+* [library_client](https://npmjs.org/package/@thzero/library_client)
+
+
 ### Firebase
 
 Google Firebase (https://firebase.google.com) provides the social based authentication; currently only Google social accounts are supported.
