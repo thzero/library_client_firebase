@@ -10,11 +10,10 @@
 
 ### Requirements
 
-#### NodeJs
+#### Packages
 
-Requires 
-* [library_common](https://npmjs.org/package/@thzero/library_common)
-* [library_client](https://npmjs.org/package/@thzero/library_client)
+* [![NPM](https://nodei.co/npm/@thzero/library_common.png?compact=true)](https://npmjs.org/package/@thzero/library_common)
+* [![NPM](https://nodei.co/npm/@thzero/library_client.png?compact=true)](https://npmjs.org/package/@thzero/library_client)
 
 ## Configuration
 
