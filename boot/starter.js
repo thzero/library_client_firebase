@@ -9,9 +9,7 @@ import GlobalUtility from '@thzero/library_client/utility/global';
 import config from 'local-config';
 
 // export default async ({
-export default ({
-	setup
-}) => {
+export default (setup) => {
 	const configExternal = config.external;
 	if (!configExternal)
 		throw Error('Invalid external config.');
