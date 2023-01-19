@@ -48,7 +48,11 @@ class FirebaseAuthService extends UserAuthService {
 	get isAuthenticated() {
 		const user = getAuth().currentUser;
 		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
-		return user != null;
+		return user !== null;
+	}
+
+	get token() {
+		return this._serviceUser.token;
 	}
 
 	async onAuthStateChanged(user) {
