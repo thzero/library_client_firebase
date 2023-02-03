@@ -2,9 +2,9 @@
 // import 'firebase/auth';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
-import LibraryConstants from '@thzero/library_client/constants';
+import LibraryClientConstants from '@thzero/library_client/constants';
 
-import Utility from '@thzero/library_common/utility';
+import LibraryCommonUtility from '@thzero/library_common/utility';
 
 import UserAuthService from '@thzero/library_client/service/auth/user';
 
@@ -36,12 +36,12 @@ class FirebaseAuthService extends UserAuthService {
 	async init(injector) {
 		await super.init(injector);
 
-		this._serviceRouter = this._injector.getService(LibraryConstants.InjectorKeys.SERVICE_ROUTER);
+		this._serviceRouter = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_ROUTER);
 	}
 
 	get externalUser() {
 		const user = getAuth().currentUser;
-		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, Utility.generateId());
+		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryCommonUtility.generateId());
 		return user;
 	}
 
@@ -56,14 +56,14 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async onAuthStateChanged(user) {
-		const correlationId = Utility.generateId();
+		const correlationId = LibraryCommonUtility.generateId();
 		try {
 			await this.updateExternalUser(correlationId, user, true);
 			// if (!user)
 			// 	return
 
 			await this._serviceUser.setAuthCompleted(correlationId, true);
-			this._serviceEvent.emit(LibraryConstants.EventKeys.Auth.Refresh, user);
+			this._serviceEvent.emit(LibraryClientConstants.EventKeys.Auth.Refresh, user);
 		}
 		catch (err) {
 			this._logger.exception('FirebaseAuthService', 'onAuthStateChanged', err, correlationId);
@@ -212,8 +212,8 @@ class FirebaseAuthService extends UserAuthService {
 
 				this.announceToken(correlationId, user, token);
 
-				const expired = Utility.getDateParse(tokenResult.expirationTime);
-				const now = Utility.getDate();
+				const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
+				const now = LibraryCommonUtility.getDate();
 				const diff = expired.diff(now);
 				const min = 5 * 60 * 1000;
 				if (diff <= min) {

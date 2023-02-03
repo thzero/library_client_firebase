@@ -2,9 +2,9 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
-import LibraryConstants from '@thzero/library_client/constants';
+import LibraryClientConstants from '@thzero/library_client/constants';
 
-import GlobalUtility from '@thzero/library_client/utility/global';
+import LibrartyClientUtility from '@thzero/library_client/utility/index';
 
 import config from 'local-config';
 
@@ -31,7 +31,7 @@ export default (setup) => {
 	// eslint-disable-next-line
 	let init = false;
 	firebaseAuth.onAuthStateChanged(async function(user) {
-		const auth = GlobalUtility.$injector.getService(LibraryConstants.InjectorKeys.SERVICE_AUTH);
+		const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
 		await auth.onAuthStateChanged(user);
 		if (!init) {
 			init = true;
