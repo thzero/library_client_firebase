@@ -56,7 +56,7 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async onAuthStateChanged(user) {
-		const correlationId = LibraryCommonUtility.generateId();
+		const correlationId = LibraryCommonUtility.correlationId();
 		try {
 			await this.updateExternalUser(correlationId, user, true);
 			// if (!user)
