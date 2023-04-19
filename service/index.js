@@ -86,6 +86,149 @@ class FirebaseAuthService extends UserAuthService {
 		// }
 	}
 
+	async refreshToken(correlationId, user, forceRefresh) {
+		forceRefresh = forceRefresh !== null ? forceRefresh : false;
+
+		try {
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'user', user, correlationId);
+			if (!user) {
+				await this._serviceUser.setTokenResult(correlationId, null);
+				await this._serviceUser.setClaims(correlationId, null);
+				this.announceToken(correlationId, user, null);
+
+				return;
+			}
+
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
+			const currentUser = await getAuth().currentUser;
+			this._logger.debug('FirebaseAuthService', 'refreshToken', 'currentUser', currentUser, correlationId);
+			if (!currentUser)
+				return;
+
+			const tokenResult = await currentUser.getIdTokenResult(forceRefresh);
+			if (tokenResult) {
+				await this._serviceUser.setTokenResult(correlationId, tokenResult);
+				const token = tokenResult.token;
+				let claims = token != null ? tokenResult.claims : null;
+				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
+				claims = claims != null ? claims.custom : null;
+				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
+				await this._serviceUser.setClaims(correlationId, claims);
+
+				this.announceToken(correlationId, user, token);
+
+				const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
+				const now = LibraryCommonUtility.getDate();
+				const diff = expired.diff(now);
+				const min = 5 * 60 * 1000;
+				if (diff <= min) {
+					await this.refreshToken(correlationId, getAuth().currentUser, true).then();
+					return;
+				}
+
+				if (this._polling)
+					clearInterval(this._polling);
+
+				const self = this;
+				this._polling = setInterval(async () => {
+					await self.refreshToken(correlationId, self.user, true).then();
+				}, diff); // 60 * 1000)
+			}
+			else {
+				await this._serviceUser.setTokenResult(correlationId, null);
+				await this._serviceUser.setClaims(correlationId, null);
+
+				this.announceToken(correlationId, user, token);
+
+				if (this._polling)
+					clearInterval(this._polling);
+			}
+		}
+		catch (err) {
+			this._logger.exception('FirebaseAuthService', 'refreshToken', err, correlationId);
+			throw err;
+		}
+	}
+
+	async resolveAuthorization(correlationId, requiresAuthRoles, requiresAuthLogical) {
+		// const serviceAuth = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+		// const serviceLogger = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_LOGGER);
+		// const serviceSecurity = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_SECURITY);
+		// const serviceStore = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_STORE);
+		this._serviceLogger.info2('requiresAuth');
+		let isLoggedIn = this.isAuthenticated;
+		this._serviceLogger.info2('authorization.isLoggedIn', isLoggedIn);
+		console.log('authorization.isLoggedIn', isLoggedIn);
+		if (!isLoggedIn) {
+			// Briefly wait for authentication to settle...
+			let i = 0;
+			while (await this.sleep(150)) {
+				if (this._serviceStore.userAuthCompleted) {
+					this._serviceLogger.info2('authorization.userAuthCompleted', userAuthCompleted);
+					console.log('authorization.userAuthCompleted', userAuthCompleted);
+					break;
+				}
+				i++;
+				this._serviceLogger.info2('waiting... ' + i);
+				if (i > 5) {
+					this._serviceLogger.warn2('authorization.userAuthCompleted failed');
+					break;
+				}
+			}
+			const isLoggedInAuthCompleted = this.isAuthenticated;
+			this._serviceLogger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
+			console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
+			isLoggedIn = isLoggedInAuthCompleted;
+		}
+		this._serviceLogger.info2('authorization.isLoggedIn.final', isLoggedIn);
+		console.log('authorization.isLoggedIn.final', isLoggedIn);
+		if (!isLoggedIn) {
+			this._serviceLogger.warn2('authorization.isLoggedIn - failed');
+			console.log('authorization.isLoggedIn - failed');
+			// LibraryClientUtility.$EventBus.on('auth-refresh', (user) => {
+			//	 this._serviceLogger.debug('auth-refresh', user)
+			//	 this._serviceLogger.debug('middleware', 'auth-refresh', null, user, correlationId);
+			//	 next()
+			// })
+			// return
+			return false;
+		}
+
+		this._serviceLogger.info2('authorization.isLoggedIn - success');
+		console.log('authorization.isLoggedIn - success');
+
+		const user = this._serviceStore.user;
+		let success = true;
+		this._serviceLogger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
+		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
+		this._serviceLogger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
+		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
+
+		if (requiresAuthRoles) {
+			success = await this._serviceSecurity.authorizationCheckRoles(correlationId, user, roles, record.meta.requiresAuthLogical);
+			this._serviceLogger.info2('authorization.roles.success', success);
+			console.log('authorization.roles.success', success);
+		}
+
+		this._serviceLogger.debug('middleware', 'authorization', 'success', success, correlationId);
+		console.log('authorization.roles.success', success);
+		this._serviceLogger.info2('authorization.roles.success', success);
+		if (!success) {
+			this._serviceLogger.warn2('authorization.roles - failed');
+			console.log('authorization.roles - failed');
+			LibraryClientUtility.$navRouter.push('/', null, () => {
+				// LibraryClientUtility.$navRouter.push('/')
+				// window.location.href = '/'
+			});
+			return false;
+		}
+
+		this._serviceLogger.info2('authorization.roles - success');
+		console.log('authorization.roles - success');
+
+		return true;
+	}
+
 	async signIn(correlationId) {
 		if (this.isAuthenticated)
 			return false;
@@ -168,6 +311,12 @@ class FirebaseAuthService extends UserAuthService {
 		}
 	}
 
+	sleep(ms) {
+	  return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	  });
+	}
+
 	// async token(forceRefresh) {
 	// 	if (!forceRefresh)
 	// 		forceRefresh = false
@@ -180,70 +329,6 @@ class FirebaseAuthService extends UserAuthService {
 	// 	this._logger.debug('FirebaseAuthService', 'token', 'forceRefresh', forceRefresh, correlationId)
 	// 	return this.refreshToken'FirebaseAuthService', 'token', user, forceRefresh)
 	// }
-
-	async refreshToken(correlationId, user, forceRefresh) {
-		forceRefresh = forceRefresh !== null ? forceRefresh : false;
-
-		try {
-			this._logger.debug('FirebaseAuthService', 'refreshToken', 'user', user, correlationId);
-			if (!user) {
-				await this._serviceUser.setTokenResult(correlationId, null);
-				await this._serviceUser.setClaims(correlationId, null);
-				this.announceToken(correlationId, user, null);
-
-				return;
-			}
-
-			this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
-			const currentUser = await getAuth().currentUser;
-			this._logger.debug('FirebaseAuthService', 'refreshToken', 'currentUser', currentUser, correlationId);
-			if (!currentUser)
-				return;
-
-			const tokenResult = await currentUser.getIdTokenResult(forceRefresh);
-			if (tokenResult) {
-				await this._serviceUser.setTokenResult(correlationId, tokenResult);
-				const token = tokenResult.token;
-				let claims = token != null ? tokenResult.claims : null;
-				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
-				claims = claims != null ? claims.custom : null;
-				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
-				await this._serviceUser.setClaims(correlationId, claims);
-
-				this.announceToken(correlationId, user, token);
-
-				const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
-				const now = LibraryCommonUtility.getDate();
-				const diff = expired.diff(now);
-				const min = 5 * 60 * 1000;
-				if (diff <= min) {
-					await this.refreshToken(correlationId, getAuth().currentUser, true).then();
-					return;
-				}
-
-				if (this._polling)
-					clearInterval(this._polling);
-
-				const self = this;
-				this._polling = setInterval(async () => {
-					await self.refreshToken(correlationId, self.user, true).then();
-				}, diff); // 60 * 1000)
-			}
-			else {
-				await this._serviceUser.setTokenResult(correlationId, null);
-				await this._serviceUser.setClaims(correlationId, null);
-
-				this.announceToken(correlationId, user, token);
-
-				if (this._polling)
-					clearInterval(this._polling);
-			}
-		}
-		catch (err) {
-			this._logger.exception('FirebaseAuthService', 'refreshToken', err, correlationId);
-			throw err;
-		}
-	}
 
 	async updateExternalUser(correlationId, user) {
 		// if (this._lock)
