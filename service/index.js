@@ -1,5 +1,6 @@
-// import firebase from 'firebase/app';
-// import 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+// import { getAuth } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 import LibraryClientConstants from '@thzero/library_client/constants';
@@ -18,6 +19,12 @@ class FirebaseAuthService extends UserAuthService {
 		this._serviceRouter = null;
 	}
 
+	async init(injector) {
+		await super.init(injector);
+
+		this._serviceRouter = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_ROUTER);
+	}
+
 	async deleteUser(correlationId) {
 		try {
 			const user = await getAuth().currentUser;
@@ -33,26 +40,54 @@ class FirebaseAuthService extends UserAuthService {
 		}
 	}
 
-	async init(injector) {
-		await super.init(injector);
-
-		this._serviceRouter = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_ROUTER);
-	}
-
 	get externalUser() {
 		const user = getAuth().currentUser;
 		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryCommonUtility.generateId());
 		return user;
 	}
 
+	async initialize(router) {
+		const configExternal = this._config.getExternal();
+		if (!configExternal)
+			throw Error('Invalid external config.');
+		const configFirebase = configExternal.firebase;
+		if (!configFirebase)
+			throw Error('Invalid firebase config.');
+		initializeApp(configFirebase);
+		if (configFirebase.measurementId)
+			getAnalytics();
+
+		let outsideResolve;
+		let outsideReject;
+		const promiseAuth = new Promise(function(resolve, reject) {
+			outsideResolve = resolve;
+			outsideReject = reject;
+		});
+
+		const self = this;
+		const firebaseAuth = getAuth();
+		// eslint-disable-next-line
+		let init = false;
+		firebaseAuth.onAuthStateChanged(async function(user) {
+			// const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+			// await auth.onAuthStateChanged(user);
+			await self.onAuthStateChanged(user);
+			if (!init) {
+				init = true;
+				outsideResolve(true);
+				return;
+			}
+
+			outsideReject();
+		});
+
+		return promiseAuth;
+	}
+
 	get isAuthenticated() {
 		const user = getAuth().currentUser;
 		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
 		return user !== null;
-	}
-
-	get token() {
-		return this._serviceUser.token;
 	}
 
 	async onAuthStateChanged(user) {
@@ -315,6 +350,10 @@ class FirebaseAuthService extends UserAuthService {
 	  return new Promise((resolve) => {
 		setTimeout(resolve, ms);
 	  });
+	}
+
+	get token() {
+		return this._serviceUser.token;
 	}
 
 	// async token(forceRefresh) {

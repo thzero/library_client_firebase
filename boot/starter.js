@@ -1,48 +1,50 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+// import { initializeApp } from 'firebase/app';
+// import { getAuth } from "firebase/auth";
+// import { getAnalytics } from "firebase/analytics";
 
 import LibraryClientConstants from '@thzero/library_client/constants';
 
 import LibrartyClientUtility from '@thzero/library_client/utility/index';
 
-import config from 'local-config';
+// import config from 'local-config';
 
 // export default async ({
-export default (setup) => {
-	const configExternal = config.external;
-	if (!configExternal)
-		throw Error('Invalid external config.');
-	const configFirebase = configExternal.firebase;
-	if (!configFirebase)
-		throw Error('Invalid firebase config.');
-	initializeApp(configFirebase);
-	if (configFirebase.measurementId)
-		getAnalytics();
+export default (router) => {
+	const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+	return auth.initialize(router);
+	// const configExternal = config.external;
+	// if (!configExternal)
+	// 	throw Error('Invalid external config.');
+	// const configFirebase = configExternal.firebase;
+	// if (!configFirebase)
+	// 	throw Error('Invalid firebase config.');
+	// initializeApp(configFirebase);
+	// if (configFirebase.measurementId)
+	// 	getAnalytics();
 
-	let outsideResolve;
-	let outsideReject;
-	const promiseAuth = new Promise(function(resolve, reject) {
-		outsideResolve = resolve;
-		outsideReject = reject;
-	});
+	// let outsideResolve;
+	// let outsideReject;
+	// const promiseAuth = new Promise(function(resolve, reject) {
+	// 	outsideResolve = resolve;
+	// 	outsideReject = reject;
+	// });
 
-	const firebaseAuth = getAuth();
-	// eslint-disable-next-line
-	let init = false;
-	firebaseAuth.onAuthStateChanged(async function(user) {
-		const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
-		await auth.onAuthStateChanged(user);
-		if (!init) {
-			init = true;
-			outsideResolve(true);
-			return;
-		}
+	// const firebaseAuth = getAuth();
+	// // eslint-disable-next-line
+	// let init = false;
+	// firebaseAuth.onAuthStateChanged(async function(user) {
+	// 	const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+	// 	await auth.onAuthStateChanged(user);
+	// 	if (!init) {
+	// 		init = true;
+	// 		outsideResolve(true);
+	// 		return;
+	// 	}
 
-		outsideReject();
-	});
+	// 	outsideReject();
+	// });
 
-	setup();
+	// setup();
 
-	return promiseAuth;
+	// return promiseAuth;
 };
