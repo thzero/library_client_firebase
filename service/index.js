@@ -5,6 +5,7 @@ import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 import LibraryClientConstants from '@thzero/library_client/constants';
 
+import LibraryClientUtility from '@thzero/library_client/utility/index';
 import LibraryCommonUtility from '@thzero/library_common/utility';
 
 import UserAuthService from '@thzero/library_client/service/auth/user';
@@ -12,6 +13,8 @@ import UserAuthService from '@thzero/library_client/service/auth/user';
 class FirebaseAuthService extends UserAuthService {
 	constructor() {
 		super();
+
+		this._auth = null;
 
 		// this._lock = false
 		this._polling = null;
@@ -27,7 +30,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async deleteUser(correlationId) {
 		try {
-			const user = await getAuth().currentUser;
+			const user = await this.getExternalUser();
 			if (!user)
 				return;
 
@@ -40,22 +43,25 @@ class FirebaseAuthService extends UserAuthService {
 		}
 	}
 
-	get externalUser() {
-		const user = getAuth().currentUser;
-		this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', user, LibraryCommonUtility.generateId());
-		return user;
+	async getExternalUser() {
+		if (this._auth) {
+			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', this._auth.currentUser);
+			return this._auth.currentUser;
+		}
+		return null;
 	}
 
-	async initialize(router) {
+	async initialize(correlationId, router) {
 		const configExternal = this._config.getExternal();
 		if (!configExternal)
 			throw Error('Invalid external config.');
 		const configFirebase = configExternal.firebase;
 		if (!configFirebase)
 			throw Error('Invalid firebase config.');
-		initializeApp(configFirebase);
-		if (configFirebase.measurementId)
-			getAnalytics();
+		// initializeApp(configFirebase);
+		// if (configFirebase.measurementId)
+		// 	getAnalytics();
+		this._initializeFirebase(correlationId, configExternal, configFirebase);
 
 		let outsideResolve;
 		let outsideReject;
@@ -64,30 +70,17 @@ class FirebaseAuthService extends UserAuthService {
 			outsideReject = reject;
 		});
 
-		const self = this;
-		const firebaseAuth = getAuth();
-		// eslint-disable-next-line
-		let init = false;
-		firebaseAuth.onAuthStateChanged(async function(user) {
-			// const auth = LibrartyClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
-			// await auth.onAuthStateChanged(user);
-			await self.onAuthStateChanged(user);
-			if (!init) {
-				init = true;
-				outsideResolve(true);
-				return;
-			}
+		this._initializeAuth(correlationId, configExternal, configFirebase, outsideResolve, outsideReject);
 
-			outsideReject();
-		});
+		this._initializeAnalytics(correlationId, configExternal, configFirebase);
 
 		return promiseAuth;
 	}
 
-	get isAuthenticated() {
-		const user = getAuth().currentUser;
+	async isAuthenticated() {
+		const user = await this.getExternalUser();
 		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
-		return user !== null;
+		return LibraryCommonUtility.isNotNull(user);
 	}
 
 	async onAuthStateChanged(user) {
@@ -123,6 +116,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async refreshToken(correlationId, user, forceRefresh) {
 		forceRefresh = forceRefresh !== null ? forceRefresh : false;
+		this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
 
 		try {
 			this._logger.debug('FirebaseAuthService', 'refreshToken', 'user', user, correlationId);
@@ -135,54 +129,65 @@ class FirebaseAuthService extends UserAuthService {
 			}
 
 			this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
-			const currentUser = await getAuth().currentUser;
+			const currentUser = await this.getExternalUser();
 			this._logger.debug('FirebaseAuthService', 'refreshToken', 'currentUser', currentUser, correlationId);
 			if (!currentUser)
 				return;
 
-			const tokenResult = await currentUser.getIdTokenResult(forceRefresh);
+			if (this._polling)
+				clearInterval(this._polling);
+
+			let token = null;
+
+			const tokenResult = await this.refreshTokenResult(correlationId, forceRefresh);
 			if (tokenResult) {
 				await this._serviceUser.setTokenResult(correlationId, tokenResult);
-				const token = tokenResult.token;
+				token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
 				claims = claims != null ? claims.custom : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
 				await this._serviceUser.setClaims(correlationId, claims);
 
-				this.announceToken(correlationId, user, token);
-
-				const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
-				const now = LibraryCommonUtility.getDate();
-				const diff = expired.diff(now);
-				const min = 5 * 60 * 1000;
-				if (diff <= min) {
-					await this.refreshToken(correlationId, getAuth().currentUser, true).then();
-					return;
-				}
-
-				if (this._polling)
-					clearInterval(this._polling);
-
-				const self = this;
-				this._polling = setInterval(async () => {
-					await self.refreshToken(correlationId, self.user, true).then();
-				}, diff); // 60 * 1000)
+				this.refreshTokenExpiration(correlationId, tokenResult, user);
 			}
 			else {
 				await this._serviceUser.setTokenResult(correlationId, null);
 				await this._serviceUser.setClaims(correlationId, null);
-
-				this.announceToken(correlationId, user, token);
-
-				if (this._polling)
-					clearInterval(this._polling);
 			}
+
+			await this.announceToken(correlationId, user, token);
 		}
 		catch (err) {
 			this._logger.exception('FirebaseAuthService', 'refreshToken', err, correlationId);
 			throw err;
 		}
+	}
+
+	async refreshTokenExpiration(correlationId, tokenResult, user) {
+		const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
+		const now = LibraryCommonUtility.getDate();
+		const diff = expired.diff(now);
+		const min = 5 * 60 * 1000;
+		if (diff <= min) {
+			await this.refreshToken(correlationId, await this.getExternalUser(), true).then();
+			return;
+		}
+
+		if (this._polling)
+			clearInterval(this._polling);
+
+		const self = this;
+		this._polling = setInterval(async () => {
+			await self.refreshToken(correlationId, user, true).then();
+		}, diff); // 60 * 1000);
+	}
+
+	async refreshTokenResult(correlationId, forceRefresh) {
+		const currentUser = await this.getExternalUser();
+		if (!currentUser)
+			return null;
+		return await currentUser.getIdTokenResult(forceRefresh);
 	}
 
 	async resolveAuthorization(correlationId, requiresAuthRoles, requiresAuthLogical) {
@@ -191,7 +196,7 @@ class FirebaseAuthService extends UserAuthService {
 		// const serviceSecurity = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_SECURITY);
 		// const serviceStore = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_STORE);
 		this._serviceLogger.info2('requiresAuth');
-		let isLoggedIn = this.isAuthenticated;
+		let isLoggedIn = await this.isAuthenticated();
 		this._serviceLogger.info2('authorization.isLoggedIn', isLoggedIn);
 		console.log('authorization.isLoggedIn', isLoggedIn);
 		if (!isLoggedIn) {
@@ -210,7 +215,7 @@ class FirebaseAuthService extends UserAuthService {
 					break;
 				}
 			}
-			const isLoggedInAuthCompleted = this.isAuthenticated;
+			const isLoggedInAuthCompleted = await this.isAuthenticated();
 			this._serviceLogger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			isLoggedIn = isLoggedInAuthCompleted;
@@ -265,12 +270,12 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async signIn(correlationId) {
-		if (this.isAuthenticated)
+		if (await this.isAuthenticated())
 			return false;
 
 		try {
 			const provider = new GoogleAuthProvider();
-			const result = await signInWithPopup(getAuth(), provider);
+			const result = await signInWithPopup(this._auth, provider);
 			if (result && result.user) {
 				//const credential = GoogleAuthProvider.credentialFromResult(result);
 				// const token = credential.accessToken;
@@ -293,7 +298,7 @@ class FirebaseAuthService extends UserAuthService {
 	async signInCompleted(correlationId) {
 		// if (await auth.isAuthenticated())
 		//   return
-		// getAuth().getRedirectResult().then(function (result) {
+		// this._auth.getRedirectResult().then(function (result) {
 		// 	if (result.credential) {
 		// 		// This gives you a Google Access Token. You can use it to access the Google API.
 		// 		// eslint-disable-next-line
@@ -321,14 +326,14 @@ class FirebaseAuthService extends UserAuthService {
 
 	async signOut(correlationId) {
 		try {
-			// await getAuth().signOut()
+			// await this._auth.signOut()
 			// await this._serviceUser.dispatcher.user.setTokenResult(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setClaims(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setUser(correlationId, null)
 			// await this._serviceUser.dispatcher.user.setLoggedIn(correlationId, false)
 
 			const list = [];
-			list.push(getAuth().signOut());
+			list.push(this._auth.signOut());
 			// list.push(this._serviceUser.dispatcher.user.setTokenResult(correlationId, null))
 			// list.push(this._serviceUser.dispatcher.user.setClaims(correlationId, null))
 			// list.push(this._serviceUser.dispatcher.user.setUser(correlationId, null))
@@ -409,6 +414,36 @@ class FirebaseAuthService extends UserAuthService {
 		}
 
 		return null;
+	}
+
+	_initializeAnalytics(correlationId, configExternal, configFirebase) {
+		if (configFirebase.measurementId)
+			getAnalytics();
+	}
+
+	_initializeAuth(correlationId, configExternal, configFirebase, outsideResolve, outsideReject) {
+		this._auth = getAuth();
+
+		const self = this;
+		const firebaseAuth = this._auth;
+		// eslint-disable-next-line
+		let init = false;
+		firebaseAuth.onAuthStateChanged(async function(user) {
+			// const auth = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+			// await auth.onAuthStateChanged(user);
+			await self.onAuthStateChanged(user);
+			if (!init) {
+				init = true;
+				outsideResolve(true);
+				return;
+			}
+
+			outsideReject();
+		});
+	}
+
+	_initializeFirebase(correlationId, configExternal, configFirebase) {
+		initializeApp(configFirebase);
 	}
 }
 
