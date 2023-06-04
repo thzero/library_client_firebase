@@ -58,6 +58,9 @@ class FirebaseAuthService extends UserAuthService {
 		const configFirebase = configExternal.firebase;
 		if (!configFirebase)
 			throw Error('Invalid firebase config.');
+		// initializeApp(configFirebase);
+		// if (configFirebase.measurementId)
+		// 	getAnalytics();
 		this._initializeFirebase(correlationId, configExternal, configFirebase);
 
 		let outsideResolve;
@@ -75,9 +78,9 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async isAuthenticated() {
-		const user = await this.getExternalUser().currentUser;
+		const user = await this.getExternalUser();
 		this._logger.debug('FirebaseAuthService', 'isAuthenticated', 'user', user);
-		return user !== null;
+		return LibraryCommonUtility.isNotNull(user);
 	}
 
 	async onAuthStateChanged(user) {
@@ -113,6 +116,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async refreshToken(correlationId, user, forceRefresh) {
 		forceRefresh = forceRefresh !== null ? forceRefresh : false;
+		this._logger.debug('FirebaseAuthService', 'refreshToken', 'forceRefresh', forceRefresh, correlationId);
 
 		try {
 			this._logger.debug('FirebaseAuthService', 'refreshToken', 'user', user, correlationId);
@@ -133,26 +137,26 @@ class FirebaseAuthService extends UserAuthService {
 			if (this._polling)
 				clearInterval(this._polling);
 
+			let token = null;
+
 			const tokenResult = await this.refreshTokenResult(correlationId, forceRefresh);
 			if (tokenResult) {
 				await this._serviceUser.setTokenResult(correlationId, tokenResult);
-				const token = tokenResult.token;
+				token = tokenResult.token;
 				let claims = token != null ? tokenResult.claims : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
 				claims = claims != null ? claims.custom : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
 				await this._serviceUser.setClaims(correlationId, claims);
 
-				this.announceToken(correlationId, user, token);
-
 				this.refreshTokenExpiration(correlationId, tokenResult, user);
 			}
 			else {
 				await this._serviceUser.setTokenResult(correlationId, null);
 				await this._serviceUser.setClaims(correlationId, null);
-
-				await this.announceToken(correlationId, user, token);
 			}
+
+			await this.announceToken(correlationId, user, token);
 		}
 		catch (err) {
 			this._logger.exception('FirebaseAuthService', 'refreshToken', err, correlationId);
@@ -183,21 +187,25 @@ class FirebaseAuthService extends UserAuthService {
 		const currentUser = await this.getExternalUser();
 		if (!currentUser)
 			return null;
-		await currentUser.getIdTokenResult(forceRefresh);
+		return await currentUser.getIdTokenResult(forceRefresh);
 	}
 
 	async resolveAuthorization(correlationId, requiresAuthRoles, requiresAuthLogical) {
+		// const serviceAuth = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
+		// const serviceLogger = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_LOGGER);
+		// const serviceSecurity = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_SECURITY);
+		// const serviceStore = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_STORE);
 		this._serviceLogger.info2('requiresAuth');
 		let isLoggedIn = await this.isAuthenticated();
 		this._serviceLogger.info2('authorization.isLoggedIn', isLoggedIn);
-		// console.log('authorization.isLoggedIn', isLoggedIn);
+		console.log('authorization.isLoggedIn', isLoggedIn);
 		if (!isLoggedIn) {
 			// Briefly wait for authentication to settle...
 			let i = 0;
 			while (await this.sleep(150)) {
 				if (this._serviceStore.userAuthCompleted) {
 					this._serviceLogger.info2('authorization.userAuthCompleted', userAuthCompleted);
-					// console.log('authorization.userAuthCompleted', userAuthCompleted);
+					console.log('authorization.userAuthCompleted', userAuthCompleted);
 					break;
 				}
 				i++;
@@ -209,14 +217,14 @@ class FirebaseAuthService extends UserAuthService {
 			}
 			const isLoggedInAuthCompleted = await this.isAuthenticated();
 			this._serviceLogger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
-			// console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
+			console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			isLoggedIn = isLoggedInAuthCompleted;
 		}
 		this._serviceLogger.info2('authorization.isLoggedIn.final', isLoggedIn);
-		// console.log('authorization.isLoggedIn.final', isLoggedIn);
+		console.log('authorization.isLoggedIn.final', isLoggedIn);
 		if (!isLoggedIn) {
 			this._serviceLogger.warn2('authorization.isLoggedIn - failed');
-			// console.log('authorization.isLoggedIn - failed');
+			console.log('authorization.isLoggedIn - failed');
 			// LibraryClientUtility.$EventBus.on('auth-refresh', (user) => {
 			//	 this._serviceLogger.debug('auth-refresh', user)
 			//	 this._serviceLogger.debug('middleware', 'auth-refresh', null, user, correlationId);
@@ -227,27 +235,27 @@ class FirebaseAuthService extends UserAuthService {
 		}
 
 		this._serviceLogger.info2('authorization.isLoggedIn - success');
-		// console.log('authorization.isLoggedIn - success');
+		console.log('authorization.isLoggedIn - success');
 
 		const user = this._serviceStore.user;
 		let success = true;
 		this._serviceLogger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
-		// console.log('authorization.requiresAuthRoles', requiresAuthRoles);
+		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
 		this._serviceLogger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
-		// console.log('authorization.requiresAuthLogical', requiresAuthLogical);
+		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
 
 		if (requiresAuthRoles) {
 			success = await this._serviceSecurity.authorizationCheckRoles(correlationId, user, roles, record.meta.requiresAuthLogical);
 			this._serviceLogger.info2('authorization.roles.success', success);
-			// console.log('authorization.roles.success', success);
+			console.log('authorization.roles.success', success);
 		}
 
 		this._serviceLogger.debug('middleware', 'authorization', 'success', success, correlationId);
-		// console.log('authorization.roles.success', success);
+		console.log('authorization.roles.success', success);
 		this._serviceLogger.info2('authorization.roles.success', success);
 		if (!success) {
 			this._serviceLogger.warn2('authorization.roles - failed');
-			// console.log('authorization.roles - failed');
+			console.log('authorization.roles - failed');
 			LibraryClientUtility.$navRouter.push('/', null, () => {
 				// LibraryClientUtility.$navRouter.push('/')
 				// window.location.href = '/'
@@ -256,7 +264,7 @@ class FirebaseAuthService extends UserAuthService {
 		}
 
 		this._serviceLogger.info2('authorization.roles - success');
-		// console.log('authorization.roles - success');
+		console.log('authorization.roles - success');
 
 		return true;
 	}
