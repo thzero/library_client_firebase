@@ -10,7 +10,7 @@ import LibraryCommonUtility from '@thzero/library_common/utility/index';
 // import config from 'local-config';
 
 // export default async ({
-export default (router) => {
+export default ({router}) => {
 	const auth = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
 	return auth.initialize(LibraryCommonUtility.correlationId(), router);
 	// const configExternal = config.external;
