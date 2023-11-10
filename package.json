@@ -1,9 +1,9 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.17.17",
+  "version": "0.17.18",
   "version_major": 0,
   "version_minor": 17,
-  "version_patch": 17,
+  "version_patch": 18,
   "version_date": "11/10/2023",
   "author": "thZero",
   "license": "MIT",
