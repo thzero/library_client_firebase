@@ -45,7 +45,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async getExternalUser() {
 		if (this._auth) {
-			this._logger.debug('FirebaseAuthService', 'tokenUser', 'user', this._auth.currentUser);
+			this._logger.debug('FirebaseAuthService', 'getExternalUser', 'user', this._auth.currentUser);
 			return this._auth.currentUser;
 		}
 		return null;
@@ -217,7 +217,7 @@ class FirebaseAuthService extends UserAuthService {
 			}
 			const isLoggedInAuthCompleted = await this.isAuthenticated();
 			this._logger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
-			console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
+			// console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			isLoggedIn = isLoggedInAuthCompleted;
 		}
 		this._logger.info2('authorization.isLoggedIn.final', isLoggedIn);
@@ -239,10 +239,9 @@ class FirebaseAuthService extends UserAuthService {
 
 		const user = this._serviceUser.user;
 		let success = true;
-		this._logger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
-		this.$logger.debug('store.admin.users', 'searchAdminUsers', 'response', response);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'authorization.response', response);
 		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
-		this._logger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'authorization.requiresAuthLogical', requiresAuthLogical);
 		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
 
 		if (requiresAuthRoles) {
@@ -251,12 +250,12 @@ class FirebaseAuthService extends UserAuthService {
 			console.log('authorization.roles.success', success);
 		}
 
-		this._logger.debug('middleware', 'authorization', 'success', success, correlationId);
-		console.log('authorization.roles.success', success);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'success', success, correlationId);
+		// console.log('authorization.roles.success', success);
 		this._logger.info2('authorization.roles.success', success);
 		if (!success) {
 			this._logger.warn2('authorization.roles - failed');
-			console.log('authorization.roles - failed');
+			// console.log('authorization.roles - failed');
 			LibraryClientUtility.$navRouter.push('/', null, () => {
 				// LibraryClientUtility.$navRouter.push('/')
 				// window.location.href = '/'
@@ -264,8 +263,8 @@ class FirebaseAuthService extends UserAuthService {
 			return false;
 		}
 
-		this._logger.info2('authorization.roles - success');
-		console.log('authorization.roles - success');
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'roles - success', true, correlationId);
+		// console.log('authorization.roles - success');
 
 		return true;
 	}
