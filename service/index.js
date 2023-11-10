@@ -240,6 +240,7 @@ class FirebaseAuthService extends UserAuthService {
 		const user = this._serviceUser.user;
 		let success = true;
 		this._logger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
+		this.$logger.debug('store.admin.users', 'searchAdminUsers', 'response', response);
 		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
 		this._logger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
 		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
