@@ -195,66 +195,66 @@ class FirebaseAuthService extends UserAuthService {
 		// const serviceLogger = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_LOGGER);
 		// const serviceSecurity = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_SECURITY);
 		// const serviceStore = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_STORE);
-		this._serviceLogger.info2('requiresAuth');
+		this._logger.info2('requiresAuth');
 		let isLoggedIn = await this.isAuthenticated();
-		this._serviceLogger.info2('authorization.isLoggedIn', isLoggedIn);
+		this._logger.info2('authorization.isLoggedIn', isLoggedIn);
 		console.log('authorization.isLoggedIn', isLoggedIn);
 		if (!isLoggedIn) {
 			// Briefly wait for authentication to settle...
 			let i = 0;
 			while (await this.sleep(150)) {
 				if (this._serviceStore.userAuthCompleted) {
-					this._serviceLogger.info2('authorization.userAuthCompleted', userAuthCompleted);
+					this._logger.info2('authorization.userAuthCompleted', userAuthCompleted);
 					console.log('authorization.userAuthCompleted', userAuthCompleted);
 					break;
 				}
 				i++;
-				this._serviceLogger.info2('waiting... ' + i);
+				this._logger.info2('waiting... ' + i);
 				if (i > 5) {
-					this._serviceLogger.warn2('authorization.userAuthCompleted failed');
+					this._logger.warn2('authorization.userAuthCompleted failed');
 					break;
 				}
 			}
 			const isLoggedInAuthCompleted = await this.isAuthenticated();
-			this._serviceLogger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
+			this._logger.info2('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			console.log('authorization.isLoggedIn.userAuthCompleted', isLoggedInAuthCompleted);
 			isLoggedIn = isLoggedInAuthCompleted;
 		}
-		this._serviceLogger.info2('authorization.isLoggedIn.final', isLoggedIn);
+		this._logger.info2('authorization.isLoggedIn.final', isLoggedIn);
 		console.log('authorization.isLoggedIn.final', isLoggedIn);
 		if (!isLoggedIn) {
-			this._serviceLogger.warn2('authorization.isLoggedIn - failed');
+			this._logger.warn2('authorization.isLoggedIn - failed');
 			console.log('authorization.isLoggedIn - failed');
 			// LibraryClientUtility.$EventBus.on('auth-refresh', (user) => {
-			//	 this._serviceLogger.debug('auth-refresh', user)
-			//	 this._serviceLogger.debug('middleware', 'auth-refresh', null, user, correlationId);
+			//	 this._logger.debug('auth-refresh', user)
+			//	 this._logger.debug('middleware', 'auth-refresh', null, user, correlationId);
 			//	 next()
 			// })
 			// return
 			return false;
 		}
 
-		this._serviceLogger.info2('authorization.isLoggedIn - success');
+		this._logger.info2('authorization.isLoggedIn - success');
 		console.log('authorization.isLoggedIn - success');
 
-		const user = this._serviceStore.user;
+		const user = this._serviceUser.user;
 		let success = true;
-		this._serviceLogger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
+		this._logger.info2('authorization.requiresAuthRoles', requiresAuthRoles);
 		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
-		this._serviceLogger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
+		this._logger.info2('authorization.requiresAuthLogical', requiresAuthLogical);
 		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
 
 		if (requiresAuthRoles) {
-			success = await this._serviceSecurity.authorizationCheckRoles(correlationId, user, roles, record.meta.requiresAuthLogical);
-			this._serviceLogger.info2('authorization.roles.success', success);
+			success = await this._serviceSecurity.authorizationCheckRoles(correlationId, user, requiresAuthRoles, requiresAuthLogical);
+			this._logger.info2('authorization.roles.success', success);
 			console.log('authorization.roles.success', success);
 		}
 
-		this._serviceLogger.debug('middleware', 'authorization', 'success', success, correlationId);
+		this._logger.debug('middleware', 'authorization', 'success', success, correlationId);
 		console.log('authorization.roles.success', success);
-		this._serviceLogger.info2('authorization.roles.success', success);
+		this._logger.info2('authorization.roles.success', success);
 		if (!success) {
-			this._serviceLogger.warn2('authorization.roles - failed');
+			this._logger.warn2('authorization.roles - failed');
 			console.log('authorization.roles - failed');
 			LibraryClientUtility.$navRouter.push('/', null, () => {
 				// LibraryClientUtility.$navRouter.push('/')
@@ -263,7 +263,7 @@ class FirebaseAuthService extends UserAuthService {
 			return false;
 		}
 
-		this._serviceLogger.info2('authorization.roles - success');
+		this._logger.info2('authorization.roles - success');
 		console.log('authorization.roles - success');
 
 		return true;
@@ -359,6 +359,10 @@ class FirebaseAuthService extends UserAuthService {
 
 	get token() {
 		return this._serviceUser.token;
+	}
+
+	get user() {
+		return this._serviceUser.user;
 	}
 
 	// async token(forceRefresh) {
