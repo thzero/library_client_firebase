@@ -198,14 +198,14 @@ class FirebaseAuthService extends UserAuthService {
 		this._logger.info2('requiresAuth');
 		let isLoggedIn = await this.isAuthenticated();
 		this._logger.info2('authorization.isLoggedIn', isLoggedIn);
-		console.log('authorization.isLoggedIn', isLoggedIn);
+		// console.log('authorization.isLoggedIn', isLoggedIn);
 		if (!isLoggedIn) {
 			// Briefly wait for authentication to settle...
 			let i = 0;
 			while (await this.sleep(150)) {
 				if (this._serviceStore.userAuthCompleted) {
 					this._logger.info2('authorization.userAuthCompleted', userAuthCompleted);
-					console.log('authorization.userAuthCompleted', userAuthCompleted);
+					// console.log('authorization.userAuthCompleted', userAuthCompleted);
 					break;
 				}
 				i++;
@@ -221,10 +221,10 @@ class FirebaseAuthService extends UserAuthService {
 			isLoggedIn = isLoggedInAuthCompleted;
 		}
 		this._logger.info2('authorization.isLoggedIn.final', isLoggedIn);
-		console.log('authorization.isLoggedIn.final', isLoggedIn);
+		// console.log('authorization.isLoggedIn.final', isLoggedIn);
 		if (!isLoggedIn) {
 			this._logger.warn2('authorization.isLoggedIn - failed');
-			console.log('authorization.isLoggedIn - failed');
+			// console.log('authorization.isLoggedIn - failed');
 			// LibraryClientUtility.$EventBus.on('auth-refresh', (user) => {
 			//	 this._logger.debug('auth-refresh', user)
 			//	 this._logger.debug('middleware', 'auth-refresh', null, user, correlationId);
@@ -235,19 +235,19 @@ class FirebaseAuthService extends UserAuthService {
 		}
 
 		this._logger.info2('authorization.isLoggedIn - success');
-		console.log('authorization.isLoggedIn - success');
+		// console.log('authorization.isLoggedIn - success');
 
 		const user = this._serviceUser.user;
 		let success = true;
-		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'authorization.response', response);
-		console.log('authorization.requiresAuthRoles', requiresAuthRoles);
-		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'authorization.requiresAuthLogical', requiresAuthLogical);
-		console.log('authorization.requiresAuthLogical', requiresAuthLogical);
+		// console.log('authorization.requiresAuthRoles', requiresAuthRoles);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'requiresAuthRoles', requiresAuthRoles);
+		// console.log('authorization.requiresAuthLogical', requiresAuthLogical);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'requiresAuthLogical', requiresAuthLogical);
 
 		if (requiresAuthRoles) {
 			success = await this._serviceSecurity.authorizationCheckRoles(correlationId, user, requiresAuthRoles, requiresAuthLogical);
 			this._logger.info2('authorization.roles.success', success);
-			console.log('authorization.roles.success', success);
+			// console.log('authorization.roles.success', success);
 		}
 
 		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'success', success, correlationId);
@@ -263,7 +263,7 @@ class FirebaseAuthService extends UserAuthService {
 			return false;
 		}
 
-		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'roles - success', true, correlationId);
+		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'roles.success', true, correlationId);
 		// console.log('authorization.roles - success');
 
 		return true;
