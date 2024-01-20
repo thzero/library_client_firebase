@@ -6,7 +6,8 @@ import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import LibraryClientConstants from '@thzero/library_client/constants';
 
 import LibraryClientUtility from '@thzero/library_client/utility/index';
-import LibraryCommonUtility from '@thzero/library_common/utility';
+import LibraryCommonUtility from '@thzero/library_common/utility/index';
+import LibraryMomentUtility from '@thzero/library_common/utility/moment';
 
 import UserAuthService from '@thzero/library_client/service/auth/user';
 
@@ -165,8 +166,8 @@ class FirebaseAuthService extends UserAuthService {
 	}
 
 	async refreshTokenExpiration(correlationId, tokenResult, user) {
-		const expired = LibraryCommonUtility.getDateParse(tokenResult.expirationTime);
-		const now = LibraryCommonUtility.getDate();
+		const expired = LibraryMomentUtility.getDateParse(tokenResult.expirationTime);
+		const now = LibraryMomentUtilityc.getDate();
 		const diff = expired.diff(now);
 		const min = 5 * 60 * 1000;
 		if (diff <= min) {
