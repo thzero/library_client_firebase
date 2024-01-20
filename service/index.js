@@ -167,7 +167,7 @@ class FirebaseAuthService extends UserAuthService {
 
 	async refreshTokenExpiration(correlationId, tokenResult, user) {
 		const expired = LibraryMomentUtility.getDateParse(tokenResult.expirationTime);
-		const now = LibraryMomentUtilityc.getDate();
+		const now = LibraryMomentUtility.getDate();
 		const diff = expired.diff(now);
 		const min = 5 * 60 * 1000;
 		if (diff <= min) {
