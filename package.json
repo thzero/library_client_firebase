@@ -1,10 +1,10 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.18.30",
+  "version": "0.18.31",
   "version_major": 0,
   "version_minor": 18,
-  "version_patch": 30,
-  "version_date": "03/02/2026",
+  "version_patch": 31,
+  "version_date": "04/21/2026",
   "author": "thZero",
   "author_url": "https://www.thzero.com",
   "copyright": "2020-2026",
@@ -22,7 +22,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^12.10.0"
+    "firebase": "^12.12.1"
   },
   "peerDependencies": {
     "@thzero/library_client": "^0.18",
