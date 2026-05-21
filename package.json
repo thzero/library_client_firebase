@@ -1,10 +1,10 @@
 {
   "name": "@thzero/library_client_firebase",
-  "version": "0.18.32",
+  "version": "0.18.33",
   "version_major": 0,
   "version_minor": 18,
-  "version_patch": 32,
-  "version_date": "05/10/2026",
+  "version_patch": 33,
+  "version_date": "05/21/2026",
   "author": "thZero",
   "author_url": "https://www.thzero.com",
   "copyright": "2020-2026",
