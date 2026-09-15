@@ -144,9 +144,9 @@ class FirebaseAuthService extends UserAuthService {
 			if (tokenResult) {
 				await this._serviceUser.setTokenResult(correlationId, tokenResult);
 				token = tokenResult.token;
-				let claims = token != null ? tokenResult.claims : null;
+				let claims = LibraryCommonUtility.isNotNull(token) ? tokenResult.claims : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
-				claims = claims != null ? claims.custom : null;
+				claims = claims?.custom ?? null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
 				await this._serviceUser.setClaims(correlationId, claims);
 
