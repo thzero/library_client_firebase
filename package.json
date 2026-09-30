@@ -1,5 +1,6 @@
 {
   "name": "@thzero/library_client_firebase",
+  "type": "module",
   "version": "0.18.37",
   "version_major": 0,
   "version_minor": 18,

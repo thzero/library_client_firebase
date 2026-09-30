@@ -55,10 +55,10 @@ class FirebaseAuthService extends UserAuthService {
 	async initialize(correlationId, router) {
 		const configExternal = this._config.getExternal();
 		if (!configExternal)
-			throw Error('Invalid external config.');
+			throw new Error('Invalid external config.');
 		const configFirebase = configExternal.firebase;
 		if (!configFirebase)
-			throw Error('Invalid firebase config.');
+			throw new Error('Invalid firebase config.');
 		// initializeApp(configFirebase);
 		// if (configFirebase.measurementId)
 		// 	getAnalytics();
