@@ -25,8 +25,8 @@ export default () => {
             category: 'client',
             name: 'firebase',
             url: 'https://github.com/firebase/firebase-js-sdk',
-            licenseName: 'MIT',
-            licenseUrl: 'https://github.com/firebase/firebase-js-sdk/blob/master/LICENSE'
+            licenseName: 'Apache-2.0',
+            licenseUrl: 'https://github.com/firebase/firebase-js-sdk/blob/HEAD/LICENSE'
         }
     ];
 }
