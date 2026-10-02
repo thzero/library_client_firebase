@@ -31,61 +31,43 @@ Google Firebase (https://firebase.google.com) provides the social based authenti
 
 * Add a new project
   * If not already completed when setting up the server application
-* Setup **Authentication**, enabled Google in the **Sign-in method**.
+* Setup **Authentication**, enable Google in the **Sign-in method**.
   * If not already completed when setting up the server application
 * Get the Firebase SDK configuration
   * Go to Project Overview->Settings->General
   * Click **Add App** and select **Web**
-    * Click *Firebase SDK snippet*, select **Config*
+    * Click **Firebase SDK snippet**, select **Config**
     * Select the JSON object and store it
-    * The contents of the JSON object will be stored as key/value pairs in the external/firebase confib object (below)
+    * The contents of the JSON object will be stored as key/value pairs in the external/firebase config object (below)
 * Supports Firebase Analytics.
   * Go to Project Overview->Settings->Integrations
     * Enable the Google Analytics.
-    * Copy the 'measurementId' key//value pair into the external/firebase config object (below)
+    * Copy the 'measurementId' key/value pair into the external/firebase config object (below)
 
 ### Application Configuration
 
 * In the configuration files (development.json and production.json) of the application
-  * Add the following onfiguration block to contain the firebase key.
+  * Add the following configuration block to contain the firebase key, with the values from the JSON object above.
 
-```
-	,
+```json
 	"external": {
-		"firebase": <firebase key JSON object from above goes here>
+		"firebase": {
+			"apiKey": "...",
+			"authDomain": "...",
+			"projectId": "...",
+			"storageBucket": "...",
+			"messagingSenderId": "...",
+			"appId": "...",
+			"measurementId": "..."
+		}
 	}
 ```
+
+`measurementId` is only needed for Firebase Analytics.
 
 ### Locales
 
-Merge the following to the 'src/locals/en/index.json' file:
-
-```
-{
-	"admin": {
-		"users": "Users"
-	},
-	"forms": {
-		"externalId": "External Id",
-		"news": {
-		  "requiresAuth": "Requires Authentication",
-		},
-		"role": "Role",
-		"roles": "Roles",
-	},
-	"news": {
-		"requiresAuth": "Authenticated",
-	},
-	"users": {
-		"actions": "Actions",
-		"externalId": "External Id",
-		"id": "Id",
-		"name": "Name",
-		"role": "Role",
-		"roles": "Roles"
-	}
- }
-```
+This package has no text of its own to translate. The admin users and news pages that go with it use keys from [library_client_vue3_vuetify3](https://github.com/thzero/library_client_vue3_vuetify3); the full list, with English text, is in [library_client_vue3](https://github.com/thzero/library_client_vue3#locales). Add them to `src/locales/en.json`.
 
 ## Usage
 
@@ -105,17 +87,19 @@ Then pass a starter to the framework's `start`. The framework packages provide o
 
 ### Main.js
 
-* Add the following import statement to the 'main.js' file.
+* Add the following import statement to the 'main.js' file. For a Vue application, use the starter from [library_client_firebase_vue](https://github.com/thzero/library_client_firebase_vue), which also installs the route guard; this package's own `boot/starter` signs the user in but protects no routes.
 
-```
-import bootStarter from '@thzero/library_client_firebase/boot/starter';
+```js
+import bootStarter from '@thzero/library_client_firebase_vue/boot/starter';
 ```
 
-* Adjust the start method of the 'main.js' file to iclude 'bootAuth' as the last parameter.
+* Pass it to the start method of the 'main.js' file as the starter, after the boot files.
 
+```js
+start(App, router, store, [ /* boot files */ ], bootStarter, options);
 ```
-start(app, router, store, vuetify, [ ... ], bootStarter);
-```
+
+A Svelte application uses `@thzero/library_client_firebase_svelte/boot/starter` instead; see [library_client_firebase_svelte](https://github.com/thzero/library_client_firebase_svelte).
 
 
 ### Route authorization
@@ -129,11 +113,25 @@ The framework packages call it from their route guards.
 
 ### Route.js
 
-Routes can be denoted as not requiring authentication.  To do so, tag on the route the following in the 'meta node'.
+A route requires authentication only when its 'meta' node says so. Any route without it is public.
 
+```js
+    meta: {
+        requiresAuth: true
+    }
 ```
-    requiresAuth: false
+
+To also require roles, add them; `requiresAuthLogical` is `'or'` (any of the roles, the default) or `'and'` (all of them).
+
+```js
+    meta: {
+        requiresAuth: true,
+        requiresAuthRoles: [ 'admin' ],
+        requiresAuthLogical: 'or'
+    }
 ```
+
+Marking a public route `requiresAuth: false` is optional; it documents the choice but changes nothing.
 
 It is advised that the following routes should have authentication turned off.
 
