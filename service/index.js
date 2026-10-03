@@ -21,12 +21,17 @@ class FirebaseAuthService extends UserAuthService {
 		this._polling = null;
 
 		this._serviceRouter = null;
+		this._serviceSecurity = null;
+		this._serviceStore = null;
 	}
 
 	async init(injector) {
 		await super.init(injector);
 
 		this._serviceRouter = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_ROUTER);
+		// resolveAuthorization reads both; neither was ever assigned
+		this._serviceSecurity = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_SECURITY);
+		this._serviceStore = this._injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_STORE);
 	}
 
 	async deleteUser(correlationId) {
@@ -55,10 +60,10 @@ class FirebaseAuthService extends UserAuthService {
 	async initialize(correlationId, router) {
 		const configExternal = this._config.getExternal();
 		if (!configExternal)
-			throw Error('Invalid external config.');
+			throw new Error('Invalid external config.');
 		const configFirebase = configExternal.firebase;
 		if (!configFirebase)
-			throw Error('Invalid firebase config.');
+			throw new Error('Invalid firebase config.');
 		// initializeApp(configFirebase);
 		// if (configFirebase.measurementId)
 		// 	getAnalytics();
@@ -144,9 +149,9 @@ class FirebaseAuthService extends UserAuthService {
 			if (tokenResult) {
 				await this._serviceUser.setTokenResult(correlationId, tokenResult);
 				token = tokenResult.token;
-				let claims = token != null ? tokenResult.claims : null;
+				let claims = LibraryCommonUtility.isNotNull(token) ? tokenResult.claims : null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims', claims, correlationId);
-				claims = claims != null ? claims.custom : null;
+				claims = claims?.custom ?? null;
 				this._logger.debug('FirebaseAuthService', 'refreshToken', 'claims.custom', claims, correlationId);
 				await this._serviceUser.setClaims(correlationId, claims);
 
@@ -203,9 +208,11 @@ class FirebaseAuthService extends UserAuthService {
 		if (!isLoggedIn) {
 			// Briefly wait for authentication to settle...
 			let i = 0;
-			while (await this.sleep(150)) {
+			// was while (await this.sleep(150)): sleep resolves to undefined, so it never waited
+			for (;;) {
+				await this.sleep(150);
 				if (this._serviceStore.userAuthCompleted) {
-					this._logger.info2('authorization.userAuthCompleted', userAuthCompleted);
+					this._logger.info2('authorization.userAuthCompleted', this._serviceStore.userAuthCompleted);
 					// console.log('authorization.userAuthCompleted', userAuthCompleted);
 					break;
 				}
@@ -431,7 +438,6 @@ class FirebaseAuthService extends UserAuthService {
 
 		const self = this;
 		const firebaseAuth = this._auth;
-		// eslint-disable-next-line
 		let init = false;
 		firebaseAuth.onAuthStateChanged(async function(user) {
 			// const auth = LibraryClientUtility.$injector.getService(LibraryClientConstants.InjectorKeys.SERVICE_AUTH);
