@@ -245,7 +245,10 @@ class FirebaseAuthService extends UserAuthService {
 		this._logger.info2('authorization.isLoggedIn - success');
 		// console.log('authorization.isLoggedIn - success');
 
-		const user = this._serviceUser.user;
+		// Firebase restores its user at once, but the app's user, which carries
+		// the roles, comes from the backend afterward; checked before it arrived,
+		// a page opened directly found no user and was sent home.
+		const user = await this._awaitUser();
 		let success = true;
 		// console.log('authorization.requiresAuthRoles', requiresAuthRoles);
 		this._logger.debug('FirebaseAuthService', 'resolveAuthorization', 'requiresAuthRoles', requiresAuthRoles);
@@ -412,6 +415,17 @@ class FirebaseAuthService extends UserAuthService {
 		}
 		finally {
 			// this._lock = false
+		}
+	}
+
+	// The app's user, once the backend has answered for the signed-in user;
+	// null if it has not within the wait.
+	async _awaitUser(wait = 10000, interval = 100) {
+		for (let waited = 0; ; waited += interval) {
+			const user = this._serviceUser.user;
+			if (user || this._serviceStore.userAuthCompleted || (waited >= wait))
+				return user ?? null;
+			await this.sleep(interval);
 		}
 	}
 

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import LibraryClientConstants from '@thzero/library_client/constants';
+import LibraryClientUtility from '@thzero/library_client/utility/index';
 
 import FirebaseAuthService from '../service/index';
 
@@ -42,6 +43,42 @@ describe('resolveAuthorization', () => {
 
 		expect(await auth.resolveAuthorization('id')).toBe(true);
 		expect(auth.sleep).not.toHaveBeenCalled();
+	});
+
+	// Firebase had its user, the backend had not yet answered with the app's
+	// user and its roles: a page opened directly was sent home
+	it('waits for the app\'s user before checking its roles', async () => {
+		const auth = service({ authenticated: () => true, completed: () => false });
+		auth._serviceUser = { user: null };
+		auth._serviceSecurity = { authorizationCheckRoles: vi.fn(async (id, user) => !!user) };
+		auth.sleep = vi.fn(async () => {
+			if (auth.sleep.mock.calls.length === 3)
+				auth._serviceUser.user = { roles: [ 'user' ] };
+		});
+
+		expect(await auth.resolveAuthorization('id', [ 'user' ])).toBe(true);
+		expect(auth.sleep).toHaveBeenCalledTimes(3);
+		expect(auth._serviceSecurity.authorizationCheckRoles).toHaveBeenCalledWith('id', { roles: [ 'user' ] }, [ 'user' ], undefined);
+	});
+
+	it('stops waiting for the app\'s user once sign-in has completed without one', async () => {
+		let waits = 0;
+		const auth = service({ authenticated: () => true, completed: () => ++waits > 2 });
+		auth._serviceUser = { user: null };
+		auth._serviceSecurity = { authorizationCheckRoles: vi.fn(async (id, user) => !!user) };
+		LibraryClientUtility.$navRouter = { push: vi.fn() };
+
+		expect(await auth.resolveAuthorization('id', [ 'user' ])).toBe(false);
+		expect(LibraryClientUtility.$navRouter.push).toHaveBeenCalledWith('/', null, expect.any(Function));
+		expect(auth.sleep).toHaveBeenCalledTimes(2);
+	});
+
+	it('gives up on the app\'s user after the wait', async () => {
+		const auth = service({ authenticated: () => true, completed: () => false });
+		auth._serviceUser = { user: null };
+
+		expect(await auth._awaitUser(500, 100)).toBeNull();
+		expect(auth.sleep).toHaveBeenCalledTimes(5);
 	});
 
 	it('gets the store and security services in init', async () => {
