@@ -149,6 +149,22 @@ It is advised that the following routes should have authentication turned on.
 * Support
 * Any application routes that require authenticated users.
 
+### Firebase as a sign-in proof
+
+An app whose session is its own auth server's token, not Firebase's, uses `FirebaseProofService` (`service/proof`) instead of `FirebaseAuthService`. `idToken(correlationId, providerId)` signs in through the provider's popup (`google.com` by default, or another Firebase provider such as `apple.com`, `microsoft.com` or `github.com`), answers the Firebase ID token, and signs out of Firebase again. The app hands the token to its auth server, which checks it ([@thzero/library_server_auth_providers](https://github.com/thzero/library_server_auth_providers), `FirebaseIdTokenService`) and issues its own token.
+
+It reads the same `external.firebase` config. Use one or the other: `idToken` signs Firebase out, which would end a `FirebaseAuthService` session.
+
+```js
+import FirebaseProofService from '@thzero/library_client_firebase/service/proof';
+
+const response = await serviceFirebaseProof.idToken(correlationId);
+if (response.success)
+	await post('users/firebase/verify', { idToken: response.results });
+```
+
+[@thzero/library_client_auth_providers](https://github.com/thzero/library_client_auth_providers) uses it for its Google sign-in.
+
 ## Development
 
 ```
