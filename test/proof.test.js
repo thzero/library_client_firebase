@@ -77,6 +77,25 @@ describe('FirebaseProofService', () => {
 		expect((await service.idToken('cid')).message).toBe('Sign-in didn\'t go through (auth/popup-blocked).');
 	});
 
+	it('loads Firebase once, and preload() starts it before the click', async () => {
+		service.preload();
+		const loading = service._firebase;
+		expect(loading).not.toBeNull();
+
+		await service.idToken('cid');
+		await service.idToken('cid');
+
+		expect(service._firebase).toBe(loading);
+	});
+
+	it('preloads nothing without a Firebase config', () => {
+		service._config = { getExternal: () => ({}) };
+
+		service.preload();
+
+		expect(service._firebase).toBeNull();
+	});
+
 	it('is not available, and refuses, without a Firebase config', async () => {
 		service._config = { getExternal: () => ({}) };
 
